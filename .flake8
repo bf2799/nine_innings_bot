@@ -1,0 +1,12 @@
+[flake8]
+max-line-length = 88
+docstring-convention = pep257
+select = C,E,F,W,B,D,B950
+extend-ignore =
+    E203,
+    E501,
+    D104,
+    D105,
+    D400,
+    D401,
+    W503,

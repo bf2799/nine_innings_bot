@@ -100,8 +100,10 @@ class Scouter(object):
             except Exception:
                 cls._connect()
         # Tell user if connection failed
-        if not tuple_teams:
+        if not cls._connected:
             raise RuntimeError(
                 "Connection to scouting database could be properly established"
             )
+        if not tuple_teams:
+            raise RuntimeWarning("No given teams found in database")
         return tuple_teams

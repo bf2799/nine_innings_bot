@@ -8,6 +8,7 @@ General-purpose MLB 9 Innings Discord bot for data collection and ease-of-use to
 | ------- | ----------- |
 | /help | List all available commands and their descriptions |
 | /scout teams | Get scouting data for all teams listed, separated by spaces |
+| /gi base target | Calculate GI given 5 base stats separated by spaces and target GI # |
 
 ## Future Behaviors
 

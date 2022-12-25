@@ -20,8 +20,8 @@ async def help(context: discord.ApplicationContext) -> None:
     """
     await context.respond(
         "**/help**: List all available commands and their descriptions\n"
-        "**/scout** teams: Get teams from scouting database. Separate by spaces\n"
-        "**/gi** base target: Calculate GI given 5 base stats separated by spaces and target GI #"
+        "**/scout** *teams*: Get teams from scouting database. Separate by spaces\n"
+        "**/gi** *base* *target*: Calculate GI given 5 base stats separated by spaces and target GI #"
     )
 
 

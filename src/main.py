@@ -19,12 +19,14 @@ async def help(context: discord.ApplicationContext) -> None:
     """
     await context.respond(
         "**/help**: List all available commands and their descriptions\n"
+        "**/scout** teams: Get teams from scouting database. Separate by spaces\n"
     )
 
 
 @bot.command(
     description="Get PR and OVR of teams provided from scouting database",
     cooldown=CooldownMapping(Cooldown(rate=2, per=21600), BucketType.channel),
+    guild_only=True,
 )  # type: ignore
 @discord.option("teams", description="List of teams to retrieve, separated by spaces")  # type: ignore
 async def scout(

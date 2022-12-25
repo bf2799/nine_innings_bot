@@ -1,6 +1,9 @@
 black
 flake8
 flake8-docstrings
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
 isort
 mypy
 numpy

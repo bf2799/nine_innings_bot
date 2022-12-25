@@ -5,6 +5,7 @@ import argparse
 import discord
 from discord.ext.commands.cooldowns import BucketType, Cooldown, CooldownMapping
 
+from src.gi_calculator import calc_gi
 from src.scouter import Scouter
 
 bot = discord.Bot()  # type: ignore
@@ -20,6 +21,7 @@ async def help(context: discord.ApplicationContext) -> None:
     await context.respond(
         "**/help**: List all available commands and their descriptions\n"
         "**/scout** teams: Get teams from scouting database. Separate by spaces\n"
+        "**/gi** base target: Calculate GI given 5 base stats separated by spaces and target GI #"
     )
 
 
@@ -62,6 +64,30 @@ async def scout(
     )
     # Send formatted teams to Discord
     await context.respond(response)
+
+
+@bot.command(description="Calculate GI of player from base stats")  # type: ignore
+@discord.option("base", description="5 base stats, separated by spaces")  # type: ignore
+@discord.option("target", type=int, description="Target GI number")  # type: ignore
+async def gi(context: discord.ApplicationContext, base: str, target: int) -> None:
+    """
+    Calculate GI of player from base stats
+
+    :param context: Application context
+    :param base: 5 base stats, separated by spaces
+    :param target: Target GI number
+    """
+    try:
+        base_stats = [int(stat) for stat in base.split(" ")]
+    except ValueError:
+        await context.respond("Invalid base stats. Please try again")
+        return
+    gi = calc_gi(base_stats=base_stats, gi_target=target)
+    await context.respond(
+        f"**Base Stats**: {base}\n"
+        f"**GI Target**: {target}\n"
+        f"**Distribution**: {', '.join([str(val) for val in gi])}\n"
+    )
 
 
 @bot.event

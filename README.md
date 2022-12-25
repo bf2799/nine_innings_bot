@@ -7,6 +7,7 @@ General-purpose MLB 9 Innings Discord bot for data collection and ease-of-use to
 | Command | Description |
 | ------- | ----------- |
 | /help | List all available commands and their descriptions |
+| /scout teams | Get scouting data for all teams listed, separated by spaces |
 
 ## Future Behaviors
 

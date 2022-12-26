@@ -106,4 +106,11 @@ class Scouter(object):
             )
         if not tuple_teams:
             raise RuntimeWarning("No given teams found in database")
+        # Sort tuple teams by PR then OVR
+        tuple_teams.sort(
+            key=lambda x: (
+                int(x[cls._COLUMNS["pr"]]) if x[cls._COLUMNS["pr"]].isdigit() else 1e7,
+                -int(x[cls._COLUMNS["ovr"]]) if x[cls._COLUMNS["ovr"]].isdigit() else 0,
+            )
+        )
         return tuple_teams

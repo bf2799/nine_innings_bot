@@ -7,6 +7,7 @@ from discord.ext.commands.cooldowns import BucketType, Cooldown, CooldownMapping
 
 from src.gi_calculator import calc_gi
 from src.scouter import Scouter
+from src.train_probability_calculator import calc_train_probability
 
 bot = discord.Bot()  # type: ignore
 
@@ -21,7 +22,8 @@ async def help(context: discord.ApplicationContext) -> None:
     await context.respond(
         "**/help**: List all available commands and their descriptions\n"
         "**/scout** *teams* or *club*: Get teams or club from scouting database. Separate teams by spaces\n"
-        "**/gi** *base* *target*: Calculate GI given 5 base stats separated by spaces and target GI #"
+        "**/gi** *base* *target*: Calculate GI given 5 base stats separated by spaces and target GI #\n"
+        "**/train_prob** *conditions* *cur_train* *level*: Calculate probability of finishing train at given level with given conditions and beginning train"
     )
 
 
@@ -98,6 +100,51 @@ async def gi(context: discord.ApplicationContext, base: str, target: int) -> Non
         f"**Base Stats**: {base}\n"
         f"**GI Target**: {target}\n"
         f"**Distribution**: {', '.join([str(val) for val in gi])}\n"
+    )
+
+
+@bot.command(
+    description="Calculate probability of finishing train with given conditions"
+)  # type: ignore
+@discord.option(
+    "conditions",
+    description="Expression of final train conditions. May include stat names (CON, POW) and joining words (and/or)",
+)  # type: ignore
+@discord.option(
+    "cur_train",
+    description="[default 0s] Current train, separated by spaces",
+    default="0 0 0 0 0",
+)  # type: ignore
+@discord.option(
+    "level", description="[default 17] Target training level", type=int, default=17
+)  # type: ignore
+async def train_prob(
+    context: discord.ApplicationContext, conditions: str, cur_train: str, level: int
+) -> None:
+    """
+    Command to calculate probability of finishing a train with given conditions
+
+    :param context: Application context
+    :param cur_train: Current training stats, as string of 5 space-separated integers
+    :param level: Target training level
+    :param conditions: Grammar-based condition to parse. May include 3-letter combo for stats
+    """
+    try:
+        train_stats = [int(stat) for stat in cur_train.split(" ")]
+    except ValueError:
+        await context.respond("Invalid training stats. Please try again")
+        return
+    # Acknowledge user before long calculation
+    await context.respond("Calculating...")
+    prob = calc_train_probability(
+        cur_train=tuple(train_stats), target_level=level, condition=conditions
+    )
+    await context.respond(
+        f"Probability that:\n"
+        f"  {conditions}\n"
+        f"  at level {level}\n"
+        f"  starting at {cur_train}:\n"
+        f"{prob * 100:.3f}% (1 in {(1/prob):.3g})"
     )
 
 

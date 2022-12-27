@@ -27,6 +27,7 @@ class Scouter(object):
         "date": 1,
         "ovr": 2,
         "pr": 3,
+        "club": 4,
     }
 
     @classmethod
@@ -58,11 +59,14 @@ class Scouter(object):
             raise RuntimeError("Scouter could not connect to scouting sheet") from e
 
     @classmethod
-    def read_scouting(cls, team_names: list[str]) -> list[tuple[str, ...]]:
+    def read_scouting(
+        cls, team_names: None | list[str] = None, club_name: None | str = None
+    ) -> list[tuple[str, ...]]:
         """
         Read scouting data from Google sheets
 
         :param team_names: Teams to gather from scouting sheet
+        :param club_name: Name of club to search. Can't have club and team name
         :raises RuntimeError: Data could not be properly attained, via connection error or other
         :return: Scouting data formatted as list of (team, date, ovr, pr)
         """
@@ -74,22 +78,32 @@ class Scouter(object):
                 "Connection to scouting database could be properly established"
             )
         # Get lowercase team names
-        lower_team_names = [name.lower() for name in team_names]
         tuple_teams: list[tuple[str, ...]] = []
         # Try running sheet operations. If it fails, try connecting again. Total only twice
         for i in range(2):
             try:
                 result = (
                     cls._sheet.values()
-                    .get(spreadsheetId=cls._SHEET_ID, range="Scouting!A2:D")
+                    .get(spreadsheetId=cls._SHEET_ID, range="Scouting!A2:E")
                     .execute()
                 )
                 all_values = result.get("values", [])
-                filtered_teams = [
-                    teams
-                    for teams in [all_values][0]
-                    if teams[cls._COLUMNS["team"]].lower() in lower_team_names
-                ]
+                if team_names:
+                    filtered_teams = [
+                        teams
+                        for teams in [all_values][0]
+                        if teams[cls._COLUMNS["team"]].lower()
+                        in [name.lower() for name in team_names]
+                    ]
+                elif club_name:
+                    filtered_teams = [
+                        teams
+                        for teams in [all_values][0]
+                        if len(teams) > cls._COLUMNS["club"]
+                        and teams[cls._COLUMNS["club"]].lower() == club_name.lower()
+                    ]
+                else:
+                    filtered_teams = []
                 # Turn trailing empty cells into empty strings
                 for team in filtered_teams:
                     team_vals = [""] * len(cls._COLUMNS)

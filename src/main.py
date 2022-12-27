@@ -27,7 +27,7 @@ async def help(context: discord.ApplicationContext) -> None:
 
 @bot.command(
     description="Get PR and OVR of teams provided from scouting database",
-    cooldown=CooldownMapping(Cooldown(rate=2, per=21600), BucketType.channel),
+    cooldown=CooldownMapping(Cooldown(rate=5, per=21600), BucketType.channel),
     guild_only=True,
 )  # type: ignore
 @discord.option("teams", description="List of teams to retrieve, separated by spaces", required=False)  # type: ignore

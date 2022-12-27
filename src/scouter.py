@@ -2,6 +2,7 @@
 
 import os
 
+import numpy as np
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -89,12 +90,21 @@ class Scouter(object):
                 )
                 all_values = result.get("values", [])
                 if team_names:
+                    # Get teams from sheet also in team list
+                    team_names_lower = [name.lower() for name in team_names]
                     filtered_teams = [
                         teams
                         for teams in [all_values][0]
-                        if teams[cls._COLUMNS["team"]].lower()
-                        in [name.lower() for name in team_names]
+                        if teams[cls._COLUMNS["team"]].lower() in team_names_lower
                     ]
+                    # Sort by entered team orders
+                    filtered_team_idxs = [
+                        team_names_lower.index(team[cls._COLUMNS["team"]].lower())
+                        for team in filtered_teams
+                    ]
+                    filtered_teams = list(
+                        np.array(filtered_teams)[np.argsort(filtered_team_idxs)]
+                    )
                 elif club_name:
                     filtered_teams = [
                         teams
@@ -102,6 +112,17 @@ class Scouter(object):
                         if len(teams) > cls._COLUMNS["club"]
                         and teams[cls._COLUMNS["club"]].lower() == club_name.lower()
                     ]
+                    # Sort tuple teams by PR then OVR
+                    filtered_teams.sort(
+                        key=lambda x: (
+                            int(x[cls._COLUMNS["pr"]])
+                            if x[cls._COLUMNS["pr"]].isdigit()
+                            else 1e7,
+                            -int(x[cls._COLUMNS["ovr"]])
+                            if x[cls._COLUMNS["ovr"]].isdigit()
+                            else 0,
+                        )
+                    )
                 else:
                     filtered_teams = []
                 # Turn trailing empty cells into empty strings
@@ -120,11 +141,4 @@ class Scouter(object):
             )
         if not tuple_teams:
             raise RuntimeWarning("No given teams found in database")
-        # Sort tuple teams by PR then OVR
-        tuple_teams.sort(
-            key=lambda x: (
-                int(x[cls._COLUMNS["pr"]]) if x[cls._COLUMNS["pr"]].isdigit() else 1e7,
-                -int(x[cls._COLUMNS["ovr"]]) if x[cls._COLUMNS["ovr"]].isdigit() else 0,
-            )
-        )
         return tuple_teams

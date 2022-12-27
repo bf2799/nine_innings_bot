@@ -20,7 +20,7 @@ async def help(context: discord.ApplicationContext) -> None:
     """
     await context.respond(
         "**/help**: List all available commands and their descriptions\n"
-        "**/scout** *teams*: Get teams from scouting database. Separate by spaces\n"
+        "**/scout** *teams* or *club*: Get teams or club from scouting database. Separate teams by spaces\n"
         "**/gi** *base* *target*: Calculate GI given 5 base stats separated by spaces and target GI #"
     )
 
@@ -30,27 +30,38 @@ async def help(context: discord.ApplicationContext) -> None:
     cooldown=CooldownMapping(Cooldown(rate=2, per=21600), BucketType.channel),
     guild_only=True,
 )  # type: ignore
-@discord.option("teams", description="List of teams to retrieve, separated by spaces")  # type: ignore
+@discord.option("teams", description="List of teams to retrieve, separated by spaces", required=False)  # type: ignore
+@discord.option("club", description="Name of club to retrieve", required=False)  # type: ignore
 async def scout(
     context: discord.ApplicationContext,
     teams: str,
+    club: str,
 ):
     """
     Get PR and OVR of teams provided from scouting database.
 
     :param context: Application context
     :param teams: List of teams to search, as space-separated strings
+    :param club: Name of club to search
     """
-    # Split teams by space
-    team_list = teams.split(" ")
-    k_max_teams = 25
-    if len(team_list) > k_max_teams:
-        await context.respond(
-            f"Too many teams entered ({len(team_list)}). Maximum is {k_max_teams}."
-        )
+    # Check either teams or club were provided
+    if (teams and club) or (not teams and not club):
+        await context.respond("Only one input of teams/club may be provided")
         return
-    # Get scouting teams then format
-    team_info = Scouter.read_scouting(team_list)
+
+    # Split teams by space
+    if teams:
+        team_list = teams.split(" ")
+        k_max_teams = 25
+        if len(team_list) > k_max_teams:
+            await context.respond(
+                f"Too many teams entered ({len(team_list)}). Maximum is {k_max_teams}."
+            )
+            return
+        # Get scouting teams then format
+        team_info = Scouter.read_scouting(team_names=team_list)
+    else:
+        team_info = Scouter.read_scouting(club_name=club)
     border_str = "-" * 54
     header_str = f"| {'Team' : ^20} | {'Date' : ^10} | {'OVR': ^5} | {'PR': ^6} |"
     body_str = "\n".join(

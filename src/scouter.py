@@ -103,7 +103,9 @@ class Scouter(object):
                         for team in filtered_teams
                     ]
                     filtered_teams = list(
-                        np.array(filtered_teams)[np.argsort(filtered_team_idxs)]
+                        np.array(filtered_teams, dtype=object)[
+                            np.argsort(filtered_team_idxs)
+                        ]
                     )
                 elif club_name:
                     filtered_teams = [

@@ -5,7 +5,10 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 isort
+matplotlib
 mypy
 numpy
+pandas
 pre-commit
 py-cord
+scikit-learn

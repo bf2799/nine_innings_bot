@@ -463,23 +463,7 @@ class SimpleEval(object):
         )
 
     def _eval_call(self, node):
-        if isinstance(node.func, ast.Attribute):
-            func = self._eval(node.func)
-        else:
-            try:
-                func = self.functions[node.func.id]
-            except KeyError:
-                raise FunctionNotDefined(node.func.id, self.expr)
-            except AttributeError as e:
-                raise FeatureNotAvailable("Lambda Functions not implemented")
-
-            if func in DISALLOW_FUNCTIONS:
-                raise FeatureNotAvailable("This function is forbidden")
-
-        return func(
-            *(self._eval(a) for a in node.args),
-            **dict(self._eval(k) for k in node.keywords)
-        )
+        raise FeatureNotAvailable("Function calls not allowed")
 
     def _eval_keyword(self, node):
         return node.arg, self._eval(node.value)

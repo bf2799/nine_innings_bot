@@ -87,6 +87,7 @@ def calc_train_probability(
     }
     for key, val in stat_var_dict.items():
         condition = condition.replace(key, val)
+        condition = condition.replace(key.lower(), val)
 
     # Create condition parser
     var_val_dict = {"a": 0, "b": 0, "c": 0, "d": 0, "e": 0}

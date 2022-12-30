@@ -25,7 +25,7 @@ def calc_gi(base_stats: list[int], gi_target: int) -> list[int]:
         int(np.floor((stat - 40) / (sum(base_stats) - 200) * gi_target))
         for stat in base_stats
     ]
-    leftover_order = np.flip(np.argsort(base_stats))
+    leftover_order = np.argsort(-1 * np.array(base_stats))
     for idx in range(gi_target - sum(initial_gi)):
         initial_gi[leftover_order[idx]] += 1
     return initial_gi

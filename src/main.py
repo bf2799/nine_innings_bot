@@ -1,6 +1,7 @@
 """Create Discord bot and stop"""
 
 import argparse
+from datetime import datetime
 
 import discord
 from discord.ext.commands.cooldowns import BucketType, Cooldown, CooldownMapping
@@ -12,6 +13,18 @@ from src.train_probability_calculator import calc_train_probability
 bot = discord.Bot()  # type: ignore
 
 
+def log_user_activity(context: discord.ApplicationContext, cmd: str) -> None:
+    """
+    Log user activity of commands, user, and server
+
+    :param context: Application context
+    :param cmd: Command run to log
+    """
+    user_log.write(
+        f"{cmd}: {context.user} ({context.user.display_name}) from server {context.guild}\n"
+    )
+
+
 @bot.command(description="List all available commands and their descriptions")  # type: ignore
 async def help(context: discord.ApplicationContext) -> None:
     """
@@ -19,6 +32,8 @@ async def help(context: discord.ApplicationContext) -> None:
 
     :param context: Application context
     """
+    log_user_activity(context, "help")
+
     await context.respond(
         "**/help**: List all available commands and their descriptions\n"
         "**/scout** *teams* or *club*: Get teams or club from scouting database. Separate teams by spaces\n"
@@ -46,6 +61,8 @@ async def scout(
     :param teams: List of teams to search, as space-separated strings
     :param club: Name of club to search
     """
+    log_user_activity(context, "scout")
+
     # Check either teams or club were provided
     if (teams and club) or (not teams and not club):
         await context.respond("Only one input of teams/club may be provided")
@@ -90,6 +107,8 @@ async def gi(context: discord.ApplicationContext, base: str, target: int) -> Non
     :param base: 5 base stats, separated by spaces
     :param target: Target GI number
     """
+    log_user_activity(context, "gi")
+
     try:
         base_stats = [int(stat) for stat in base.split(" ")]
     except ValueError:
@@ -129,6 +148,8 @@ async def train_prob(
     :param level: Target training level
     :param conditions: Grammar-based condition to parse. May include 3-letter combo for stats
     """
+    log_user_activity(context, "train_prob")
+
     try:
         train_stats = [int(stat) for stat in cur_train.split(" ")]
     except ValueError:
@@ -170,8 +191,14 @@ if __name__ == "__main__":
     parser.add_argument("token_file")
     args = parser.parse_args()
 
+    # Log user action
+    user_log = open(
+        f"output/{datetime.now().strftime('user_activity_%m-%d-%y_%H-%M-%d.log')}", "w"
+    )
+
     # Read token from file
     with open(args.token_file) as tok_file:
         token: str = tok_file.readline()
 
     bot.run(token)
+    user_log.close()

@@ -64,9 +64,11 @@ async def scout(
     log_user_activity(context, "scout")
 
     # Check either teams or club were provided
-    if (teams and club) or (not teams and not club):
+    if not teams and not club:
         await context.respond("Only one input of teams/club may be provided")
         return
+    if teams and club:
+        club = ""
 
     # Split teams by space
     if teams:

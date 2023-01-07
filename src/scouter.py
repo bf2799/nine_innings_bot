@@ -95,11 +95,14 @@ class Scouter(object):
                     filtered_teams = [
                         teams
                         for teams in [all_values][0]
-                        if teams[cls._COLUMNS["team"]].lower() in team_names_lower
+                        if teams[cls._COLUMNS["team"]].lower().strip()
+                        in team_names_lower
                     ]
                     # Sort by entered team orders
                     filtered_team_idxs = [
-                        team_names_lower.index(team[cls._COLUMNS["team"]].lower())
+                        team_names_lower.index(
+                            team[cls._COLUMNS["team"]].lower().strip()
+                        )
                         for team in filtered_teams
                     ]
                     filtered_teams = list(

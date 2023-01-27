@@ -21,7 +21,7 @@ def log_user_activity(context: discord.ApplicationContext, cmd: str) -> None:
     :param cmd: Command run to log
     """
     user_log.write(
-        f"{cmd}: {context.user} ({context.user.display_name}) from server {context.guild}\n"
+        f"{datetime.now()} {cmd}: {context.user} ({context.user.display_name}) from server {context.guild}, channel {context.channel}\n"
     )
 
 

@@ -195,7 +195,9 @@ if __name__ == "__main__":
 
     # Log user action
     user_log = open(
-        f"output/{datetime.now().strftime('user_activity_%m-%d-%y_%H-%M-%d.log')}", "w"
+        f"output/{datetime.now().strftime('user_activity_%m-%d-%y_%H-%M-%d.log')}",
+        "w",
+        encoding="utf-8",
     )
 
     # Read token from file

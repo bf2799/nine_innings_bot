@@ -3,9 +3,7 @@
 import os
 
 import numpy as np
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 
@@ -17,9 +15,8 @@ class Scouter(object):
     """
 
     _SCOPES: list[str] = ["https://www.googleapis.com/auth/spreadsheets"]
-    _SHEET_ID: str = "1xjdF3dZ15q_FyUYUlMa0sAiMEYTnV51_9NRJSebeD7Y"
-    _CREDENTIAL_FILEPATH: str = "input/google_sheets_credentials.json"
-    _TOKEN_FILEPATH: str = "input/google_sheets_token.json"
+    _SHEET_ID_FILEPATH = "input/scouter_google_sheet_id.txt"
+    _SERVICE_ACCOUNT_FILEPATH: str = "input/google_service_account.json"
     _connected: bool = False
     _sheet = None
 
@@ -34,24 +31,14 @@ class Scouter(object):
     @classmethod
     def _connect(cls) -> None:
         """Connect to Google Sheets service."""
-        creds = None
-        if os.path.exists(cls._TOKEN_FILEPATH):
-            creds = Credentials.from_authorized_user_file(
-                cls._TOKEN_FILEPATH, cls._SCOPES
+        if not os.path.exists(cls._SERVICE_ACCOUNT_FILEPATH):
+            raise FileNotFoundError(
+                f"Couldn't find service account file {cls._SERVICE_ACCOUNT_FILEPATH}"
             )
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    cls._CREDENTIAL_FILEPATH, cls._SCOPES
-                )
-                creds = flow.run_local_server(port=0)
-            # Save the credentials for the next run
-            with open(cls._TOKEN_FILEPATH, "w") as token:
-                token.write(creds.to_json())
-
         try:
+            creds = Credentials.from_service_account_file(
+                cls._SERVICE_ACCOUNT_FILEPATH, scopes=cls._SCOPES
+            )
             service = build("sheets", "v4", credentials=creds)
             cls._sheet = service.spreadsheets()
             cls._connected = True
@@ -83,9 +70,11 @@ class Scouter(object):
         # Try running sheet operations. If it fails, try connecting again. Total only twice
         for i in range(2):
             try:
+                with open(cls._SHEET_ID_FILEPATH) as sheet_id_file:
+                    sheet_id = sheet_id_file.readline()
                 result = (
                     cls._sheet.values()
-                    .get(spreadsheetId=cls._SHEET_ID, range="Scouting!A2:E")
+                    .get(spreadsheetId=sheet_id, range="Scouting!A2:E")
                     .execute()
                 )
                 all_values = result.get("values", [])

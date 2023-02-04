@@ -61,7 +61,7 @@ class Scouter(object):
         # Try connecting. On failure, exception will be raised, and this will be exited
         if not cls._connected:
             cls._connect()
-        if not cls._sheet:
+        if not (cls._connected and cls._sheet):
             raise RuntimeError(
                 "Connection to scouting database could be properly established"
             )
@@ -71,7 +71,7 @@ class Scouter(object):
         for i in range(2):
             try:
                 with open(cls._SHEET_ID_FILEPATH) as sheet_id_file:
-                    sheet_id = sheet_id_file.readline()
+                    sheet_id = sheet_id_file.readline().strip("\n")
                 result = (
                     cls._sheet.values()
                     .get(spreadsheetId=sheet_id, range="Scouting!A2:E")

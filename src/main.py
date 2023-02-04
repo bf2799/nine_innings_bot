@@ -167,7 +167,7 @@ async def train_prob(
         f"  {conditions}\n"
         f"  at level {level}\n"
         f"  starting at {cur_train}:\n"
-        f"{prob * 100:.3f}% (1 in {(1/prob):.3g})"
+        f"{prob * 100:.3f}% (1 in {0 if prob == 0 else (1/prob):.3g})"
     )
 
 

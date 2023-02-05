@@ -1,4 +1,4 @@
-"""Module that calculates win probability in Ranked Battle mode"""
+"""Module that calculates win probability and expected points in ranked and club mode"""
 
 import os
 import pickle
@@ -8,13 +8,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.widgets import Slider
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression, PoissonRegressor
-from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
 
 
-class RankedWinProbabilityCalculator:
+class WinProbabilityCalculator:
     """
     Class that calculates win probability in ranked battle.
 
@@ -113,7 +110,7 @@ class RankedWinProbabilityCalculator:
         # Calculate results for multiple PRs
         kstep = 10
         predict_data = list(range(0, 5001, kstep))
-        pr_data = list(range(1165, 3801 + kstep, kstep))
+        pr_data = predict_data
         results = [cls.calc(pr, gear, predict_data) for pr in pr_data]
         fig, ax = plt.subplots(1, 1)
 
@@ -236,7 +233,7 @@ class RankedWinProbabilityCalculator:
         cls, pr: int, gear: bool, opponent_prs: list[int], opponent_tiers: list[int]
     ) -> list[float]:
         """
-        Calculate expected ranked points from playing opponents in tiers either above, at, or below your level.
+        Calculate expected ranked/club points from playing opponents in tiers either above, at, or below your level.
 
         :param pr: Team's power ranking
         :param gear: Team's gear status
@@ -270,60 +267,3 @@ class RankedWinProbabilityCalculator:
             + win_loss_points_dict[opponent_tiers[i]] * res[2]
             for i, res in enumerate(result)
         ]
-
-
-# Ranked
-print("Ranked")
-opponents = [2107, 2063, 2320, 1773, 274, 1020, 1568, 446, 670, 330]
-expected_points = [12, 12, 12, 12, 12, 12, 12, 14, 14, 14]
-RankedWinProbabilityCalculator.train()
-print(RankedWinProbabilityCalculator.get_accuracy(True))
-print(RankedWinProbabilityCalculator.get_accuracy(False))
-expected_points = RankedWinProbabilityCalculator.calc_expected_points(
-    1191, True, opponents, expected_points
-)
-print(expected_points)
-print(sum(expected_points))
-
-# Club
-print("Club")
-club_opponents = [
-    785,
-    1051,
-    317,
-    1201,
-    1506,
-    1985,
-    1993,
-    1767,
-    1985,
-    2287,
-    1871,
-    2211,
-    2051,
-    2860,
-]
-expected_club_points = [
-    130,
-    130,
-    130,
-    130,
-    130,
-    120,
-    120,
-    120,
-    120,
-    110,
-    110,
-    110,
-    110,
-    100,
-]
-expected_club_points = RankedWinProbabilityCalculator.calc_expected_points(
-    1365, True, club_opponents, expected_club_points
-)
-print(expected_club_points)
-print(sum(expected_club_points))
-
-RankedWinProbabilityCalculator.graph(1165, True)
-plt.show()

@@ -23,6 +23,7 @@ def log_user_activity(context: discord.ApplicationContext, cmd: str) -> None:
     user_log.write(
         f"{datetime.now()} {cmd}: {context.user} ({context.user.display_name}) from server {context.guild}, channel {context.channel}\n"
     )
+    user_log.flush()
 
 
 @bot.command(description="List all available commands and their descriptions")  # type: ignore

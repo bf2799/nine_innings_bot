@@ -267,3 +267,64 @@ class WinProbabilityCalculator:
             + win_loss_points_dict[opponent_tiers[i]] * res[2]
             for i, res in enumerate(result)
         ]
+
+
+# Ranked
+print("Ranked")
+opponents = [805, 804, 783]
+expected_points = [12, 12, 12]
+WinProbabilityCalculator.train()
+print(WinProbabilityCalculator.get_accuracy(True))
+print(WinProbabilityCalculator.get_accuracy(False))
+expected_points = WinProbabilityCalculator.calc_expected_points(
+    1131, True, opponents, expected_points
+)
+print(expected_points)
+print(sum(expected_points))
+
+# Club
+print("Club")
+club_opponents = [
+    269,
+    400,
+    302,
+    276,
+    516,
+    828,
+    622,
+    722,
+    442,
+    712,
+    571,
+    546,
+    722,
+    771,
+    863,
+    1196,
+]
+expected_club_points = [
+    130,
+    130,
+    130,
+    120,
+    120,
+    120,
+    120,
+    120,
+    110,
+    110,
+    110,
+    110,
+    100,
+    100,
+    100,
+    100,
+]
+expected_club_points = WinProbabilityCalculator.calc_expected_points(
+    1316, True, club_opponents, expected_club_points
+)
+print(expected_club_points)
+print(sum(expected_club_points))
+
+WinProbabilityCalculator.graph(1116, True)
+plt.show()

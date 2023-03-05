@@ -12,3 +12,4 @@ pandas
 pre-commit
 py-cord
 scikit-learn
+types-requests

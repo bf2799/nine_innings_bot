@@ -7,7 +7,7 @@ import discord
 from discord.ext.commands.cooldowns import BucketType, Cooldown, CooldownMapping
 
 from src.gi_calculator import calc_gi
-from src.scouter import Scouter
+from src.scouter import MainScouter
 from src.train_probability_calculator import calc_train_probability
 
 bot = discord.Bot()  # type: ignore
@@ -81,14 +81,14 @@ async def scout(
             )
             return
         # Get scouting teams then format
-        team_info = Scouter.read_scouting(team_names=team_list)
+        team_info = MainScouter.read_scouting(team_names=team_list)
     else:
-        team_info = Scouter.read_scouting(club_name=club)
+        team_info = MainScouter.read_scouting(club_name=club)
     border_str = "-" * 54
     header_str = f"| {'Team' : ^20} | {'Date' : ^10} | {'OVR': ^5} | {'PR': ^6} |"
     body_str = "\n".join(
         [
-            f"| {info[0] : ^20} | {info[1] : ^10} | {info[2] : ^5} | {info[3] : ^6} |"
+            f"| {info.team : ^20} | {info.date.strftime('%m/%d/%Y') : ^10} | {info.ovr if info.ovr else '' : ^5} | {info.pr if info.pr else '' : ^6} |"
             for info in team_info
         ]
     )

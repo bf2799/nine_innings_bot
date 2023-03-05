@@ -1,15 +1,46 @@
 """Module that connects to scouting database."""
-
+import abc
+import json
 import os
+from dataclasses import dataclass
+from datetime import datetime
 
 import numpy as np
+import requests
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 
-class Scouter(object):
+@dataclass
+class TeamInfo:
+    """Format of team info after scouting."""
+
+    team: str
+    date: datetime
+    ovr: float | None
+    pr: int | None
+
+
+class Scouter(abc.ABC):
+    """Interface for a scouter."""
+
+    @classmethod
+    @abc.abstractmethod
+    def read_scouting(
+        cls, team_names: None | list[str] = None, club_name: None | str = None
+    ) -> list[TeamInfo]:
+        """
+        Function interface for reading scouting. Given team names or club names, provide a list of team info.
+
+        :param team_names: List of teams to get info on
+        :param club_name: Club name to get info on
+        """
+        pass
+
+
+class GoogleSheetsScoutingQuery(Scouter):
     """
-    Class that uses Google Sheets integration for inserting and retrieving scouting data.
+    Class that uses Google Sheets integration for retrieving scouting data.
 
     Class is a singleton to ensure there is only a single connection to sheet.
     """
@@ -49,14 +80,14 @@ class Scouter(object):
     @classmethod
     def read_scouting(
         cls, team_names: None | list[str] = None, club_name: None | str = None
-    ) -> list[tuple[str, ...]]:
+    ) -> list[TeamInfo]:
         """
         Read scouting data from Google sheets
 
         :param team_names: Teams to gather from scouting sheet
         :param club_name: Name of club to search. Can't have club and team name
         :raises RuntimeError: Data could not be properly attained, via connection error or other
-        :return: Scouting data formatted as list of (team, date, ovr, pr)
+        :return: Scouting data formatted as list of TeamInfo
         """
         # Try connecting. On failure, exception will be raised, and this will be exited
         if not cls._connected:
@@ -66,7 +97,7 @@ class Scouter(object):
                 "Connection to scouting database could be properly established"
             )
         # Get lowercase team names
-        tuple_teams: list[tuple[str, ...]] = []
+        tuple_teams: list[TeamInfo] = []
         # Try running sheet operations. If it fails, try connecting again. Total only twice
         for i in range(2):
             try:
@@ -106,24 +137,25 @@ class Scouter(object):
                         if len(teams) > cls._COLUMNS["club"]
                         and teams[cls._COLUMNS["club"]].lower() == club_name.lower()
                     ]
-                    # Sort tuple teams by PR then OVR
-                    filtered_teams.sort(
-                        key=lambda x: (
-                            int(x[cls._COLUMNS["pr"]])
-                            if x[cls._COLUMNS["pr"]].isdigit()
-                            else 1e7,
-                            -int(x[cls._COLUMNS["ovr"]])
-                            if x[cls._COLUMNS["ovr"]].isdigit()
-                            else 0,
-                        )
-                    )
                 else:
                     filtered_teams = []
                 # Turn trailing empty cells into empty strings
                 for team in filtered_teams:
                     team_vals = [""] * len(cls._COLUMNS)
                     team_vals[: len(team)] = team
-                    tuple_teams.append(tuple(team_vals))
+                    team_info = TeamInfo(
+                        team=team_vals[cls._COLUMNS["team"]],
+                        date=datetime.strptime(
+                            team_vals[cls._COLUMNS["date"]], "%m/%d/%Y"
+                        ),
+                        ovr=float(team_vals[cls._COLUMNS["ovr"]])
+                        if team_vals[cls._COLUMNS["ovr"]].replace(".", "").isdigit()
+                        else None,
+                        pr=int(team_vals[cls._COLUMNS["pr"]])
+                        if team_vals[cls._COLUMNS["pr"]].isdigit()
+                        else None,
+                    )
+                    tuple_teams.append(team_info)
                 # Stop after first attempt if successful
                 break
             except Exception:
@@ -136,3 +168,130 @@ class Scouter(object):
         if not tuple_teams:
             raise RuntimeWarning("No given teams found in database")
         return tuple_teams
+
+
+class SddctScoutingQuery(Scouter):
+    """Class to scout teams from sddct.com API."""
+
+    _QUERY_KEY_FILEPATH = "input/sddct_query_key.txt"
+
+    @classmethod
+    def read_scouting(
+        cls, team_names: None | list[str] = None, club_name: None | str = None
+    ) -> list[TeamInfo]:
+        """
+        Read scouting data from SDDCT.com
+
+        :param team_names: Teams to gather from scouting site
+        :param club_name: Name of club to search. Can't have club and team name
+        :return: Scouting data formatted as list of TeamInfo
+        """
+        # Verify inputs
+        if team_names is None and club_name is None:
+            return []
+        # Read key
+        with open(cls._QUERY_KEY_FILEPATH) as key_file:
+            key = key_file.readline().strip("\n")
+        # Get data from SDDCT
+        js_input = {
+            "key": key,
+            "mode": "teams" if team_names else "club",
+            "data": club_name
+            if club_name
+            else ",".join(team_names)
+            if team_names
+            else "",
+        }
+        response = requests.post("https://api.dct.nyc/mlb9i/mlbquery", json=js_input)
+        response_json = json.loads(response.text)
+        team_info = [
+            TeamInfo(
+                team=team["team"],
+                date=datetime.strptime(str(team["date"]), "%Y%m%d"),
+                ovr=float(team["ovr"])
+                if team["ovr"].replace(".", "").isdigit()
+                else None,
+                pr=int(team["pr"]) if str(team["pr"]).isdigit() else None,
+            )
+            for team in response_json
+        ]
+        return team_info
+
+
+class MainScouter(Scouter):
+    """
+    Class that queries from all available locations for retrieving scouting data.
+
+    Class is a singleton to ensure there is only a single connection to sheet.
+    Once data from multiple sources is retrieved, it's combined to keep newer data.
+    """
+
+    @classmethod
+    def read_scouting(
+        cls, team_names: None | list[str] = None, club_name: None | str = None
+    ) -> list[TeamInfo]:
+        """
+        Read scouting data from all sources.
+
+        :param team_names: Teams to gather from scouting sources
+        :param club_name: Name of club to search. Can't have club and team name
+        :return: Scouting data formatted as list of TeamInfo
+        """
+        # Stop if no input provided
+        if not team_names and not club_name:
+            return []
+
+        # Get teams in club from all sources if club provided
+        all_team_names: list[str] = []
+        if club_name and not team_names:
+            for scouter1 in [GoogleSheetsScoutingQuery]:
+                teams = scouter1.read_scouting(club_name=club_name)
+                all_team_names = all_team_names + [team.team for team in teams]
+            unique_team_names = []
+            for x in all_team_names:
+                if x not in unique_team_names:
+                    unique_team_names.append(x)
+            all_team_names = unique_team_names
+
+        # Gather all teams and ensure no duplicate team names remain at end
+        elif team_names:
+            all_team_names = team_names
+
+        # Scout teams
+        existing_teams: list[TeamInfo] = []
+        for scouter2 in [GoogleSheetsScoutingQuery, SddctScoutingQuery]:
+            existing_team_names = [ex_team.team for ex_team in existing_teams]
+            cur_teams = scouter2.read_scouting(team_names=all_team_names)
+            # Loop through all teams in current scouter
+            for cur_team in cur_teams:
+                # If current team already in existing teams, update OVR, PR, and date accordingly
+                if cur_team.team in existing_team_names:
+                    compare_team_idx = existing_team_names.index(cur_team.team)
+                    compare_team = existing_teams[compare_team_idx]
+                    # OVR is highest OVR that isn't None
+                    existing_teams[compare_team_idx].ovr = max(
+                        list(filter(None, [compare_team.ovr, cur_team.ovr]))
+                    )
+                    # PR is newest available PR
+                    if cur_team.pr and (
+                        cur_team.date > existing_teams[compare_team_idx].date
+                        or not existing_teams[compare_team_idx].pr
+                    ):
+                        existing_teams[compare_team_idx].pr = cur_team.pr
+                    # Date is newest date
+                    existing_teams[compare_team_idx].date = max(
+                        existing_teams[compare_team_idx].date, cur_team.date
+                    )
+                # If current team not already in existing teams, just add it
+                else:
+                    existing_teams.append(cur_team)
+                    existing_team_names.append(cur_team.team)
+        # If club was provided, sort output by PR and OVR
+        if club_name:
+            existing_teams.sort(
+                key=lambda x: (
+                    x.pr,
+                    -x.ovr if x.ovr else None,
+                )
+            )
+        return existing_teams

@@ -273,7 +273,7 @@ class WinProbabilityCalculator:
 print("Ranked")
 opponents = [805, 804, 783]
 expected_points = [12, 12, 12]
-WinProbabilityCalculator.train()
+# WinProbabilityCalculator.train()
 print(WinProbabilityCalculator.get_accuracy(True))
 print(WinProbabilityCalculator.get_accuracy(False))
 expected_points = WinProbabilityCalculator.calc_expected_points(
@@ -283,30 +283,38 @@ print(expected_points)
 print(sum(expected_points))
 
 # Club
+current_pr = 635
 print("Club")
 club_opponents = [
-    1508,
-    1574,
-    544,
-    758,
-    867,
-    1554,
-    1320,
-    1316,
-    1664,
-    3975,
-    2912,
-    1440,
-    1430,
+    424,
+    553,
+    2189,
+    313,
+    924,
+    502,
+    511,
+    458,
+    486,
+    965,
+    1118,
+    681,
+    879,
+    114,
+    1064,
+    917,
+    216,
+    2365,
 ]
-expected_club_points = [130, 130, 130, 130, 130, 120, 120, 120, 120, 110, 110, 110, 100]
-expected_win_prob = WinProbabilityCalculator.calc(1111, True, club_opponents)
+expected_club_points = []
+expected_win_prob = WinProbabilityCalculator.calc(current_pr, True, club_opponents)
 expected_club_points = WinProbabilityCalculator.calc_expected_points(
-    1111, True, club_opponents, expected_club_points
+    current_pr, True, club_opponents, expected_club_points
 )
-print([win_prob[0] for win_prob in expected_win_prob])
-print(expected_club_points)
+for win_prob, points, opponent in zip(
+    expected_win_prob, expected_club_points, club_opponents
+):
+    print(f"{opponent}: {win_prob[0]*100:.3f}% ({points:.3f})")
 print(sum(expected_club_points))
 
-WinProbabilityCalculator.graph(1311, True)
+WinProbabilityCalculator.graph(current_pr, True)
 plt.show()

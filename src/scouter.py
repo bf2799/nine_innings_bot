@@ -290,8 +290,8 @@ class MainScouter(Scouter):
         if club_name:
             existing_teams.sort(
                 key=lambda x: (
-                    x.pr,
-                    -x.ovr if x.ovr else None,
+                    x.pr if x.pr else 1e7,
+                    -x.ovr if x.ovr else 0,
                 )
             )
         return existing_teams

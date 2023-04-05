@@ -92,9 +92,7 @@ async def scout(
             for info in team_info
         ]
     )
-    response = (
-        f"```\n{border_str}\n{header_str}\n{border_str}\n{body_str}\n{border_str}\n```"
-    )
+    response = f"```\n{club if club else ''}\n{border_str}\n{header_str}\n{border_str}\n{body_str}\n{border_str}\n```"
     # Send formatted teams to Discord
     await context.respond(response)
 

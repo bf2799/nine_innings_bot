@@ -204,6 +204,9 @@ class SddctScoutingQuery(Scouter):
         }
         response = requests.post("https://api.dct.nyc/mlb9i/mlbquery", json=js_input)
         response_json = json.loads(response.text)
+        lower_team_names = (
+            [] if not team_names else [name.lower() for name in team_names]
+        )
         team_info = [
             TeamInfo(
                 team=team["team"],
@@ -214,6 +217,7 @@ class SddctScoutingQuery(Scouter):
                 pr=int(team["pr"]) if str(team["pr"]).isdigit() else None,
             )
             for team in response_json
+            if club_name or team["team"].lower() in lower_team_names
         ]
         return team_info
 
@@ -249,8 +253,8 @@ class MainScouter(Scouter):
                 all_team_names = all_team_names + [team.team for team in teams]
             unique_team_names = []
             for x in all_team_names:
-                if x not in unique_team_names:
-                    unique_team_names.append(x)
+                if x.lower() not in unique_team_names:
+                    unique_team_names.append(x.lower())
             all_team_names = unique_team_names
 
         # Gather all teams and ensure no duplicate team names remain at end
@@ -259,14 +263,14 @@ class MainScouter(Scouter):
 
         # Scout teams
         existing_teams: list[TeamInfo] = []
+        existing_team_names: list[str] = []
         for scouter2 in [GoogleSheetsScoutingQuery, SddctScoutingQuery]:
-            existing_team_names = [ex_team.team for ex_team in existing_teams]
             cur_teams = scouter2.read_scouting(team_names=all_team_names)
             # Loop through all teams in current scouter
             for cur_team in cur_teams:
                 # If current team already in existing teams, update OVR, PR, and date accordingly
-                if cur_team.team in existing_team_names:
-                    compare_team_idx = existing_team_names.index(cur_team.team)
+                if cur_team.team.lower() in existing_team_names:
+                    compare_team_idx = existing_team_names.index(cur_team.team.lower())
                     compare_team = existing_teams[compare_team_idx]
                     # OVR is highest OVR that isn't None
                     existing_teams[compare_team_idx].ovr = max(
@@ -285,7 +289,7 @@ class MainScouter(Scouter):
                 # If current team not already in existing teams, just add it
                 else:
                     existing_teams.append(cur_team)
-                    existing_team_names.append(cur_team.team)
+                    existing_team_names.append(cur_team.team.lower())
         # If club was provided, sort output by PR and OVR
         if club_name:
             existing_teams.sort(
@@ -294,4 +298,9 @@ class MainScouter(Scouter):
                     -x.ovr if x.ovr else 0,
                 )
             )
+        # Otherwise, sort by team name provided
+        elif team_names:
+            lower_team_names = [name.lower() for name in team_names]
+            existing_teams.sort(key=lambda x: (lower_team_names.index(x.team.lower())))
+
         return existing_teams

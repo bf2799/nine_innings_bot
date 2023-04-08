@@ -273,9 +273,8 @@ class MainScouter(Scouter):
                     compare_team_idx = existing_team_names.index(cur_team.team.lower())
                     compare_team = existing_teams[compare_team_idx]
                     # OVR is highest OVR that isn't None
-                    existing_teams[compare_team_idx].ovr = max(
-                        list(filter(None, [compare_team.ovr, cur_team.ovr]))
-                    )
+                    ovrs = list(filter(None, [compare_team.ovr, cur_team.ovr]))
+                    existing_teams[compare_team_idx].ovr = max(ovrs) if ovrs else None
                     # PR is newest available PR
                     if cur_team.pr and (
                         cur_team.date > existing_teams[compare_team_idx].date

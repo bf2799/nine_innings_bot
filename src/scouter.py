@@ -144,7 +144,7 @@ class GoogleSheetsScoutingQuery(Scouter):
                     team_vals = [""] * len(cls._COLUMNS)
                     team_vals[: len(team)] = team
                     team_info = TeamInfo(
-                        team=team_vals[cls._COLUMNS["team"]],
+                        team=team_vals[cls._COLUMNS["team"]].strip(),
                         date=datetime.strptime(
                             team_vals[cls._COLUMNS["date"]], "%m/%d/%Y"
                         ),

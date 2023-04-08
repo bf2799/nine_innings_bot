@@ -72,6 +72,7 @@ async def scout(
         club = ""
 
     # Split teams by space
+    await context.respond("Scouting...")
     if teams:
         team_list = teams.split(" ")
         k_max_teams = 25

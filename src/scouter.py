@@ -203,7 +203,10 @@ class SddctScoutingQuery(Scouter):
             else "",
         }
         response = requests.post("https://api.dct.nyc/mlb9i/mlbquery", json=js_input)
-        response_json = json.loads(response.text)
+        try:
+            response_json = json.loads(response.text)
+        except json.decoder.JSONDecodeError:
+            return []
         lower_team_names = (
             [] if not team_names else [name.lower() for name in team_names]
         )

@@ -144,17 +144,17 @@ class WinProbabilityCalculator:
         ax.set_ylabel("Probability (%)")
         ax.set_xlabel("Power Ranking")
 
-        def replot(pr_: int) -> None:
+        def replot(pr_: float) -> None:
             nonlocal win_axis, tie_axis, loss_axis
             win_axis.remove()
             tie_axis.remove()
             loss_axis.remove()
 
-            win_axis, tie_axis, loss_axis = generate_traces(pr_)
+            win_axis, tie_axis, loss_axis = generate_traces(int(pr_))
             fig.canvas.draw_idle()
 
         fig.subplots_adjust(bottom=0.25)
-        ax_pr = fig.add_axes([0.1, 0.1, 0.8, 0.03])
+        ax_pr = fig.add_axes((0.1, 0.1, 0.8, 0.03))
         slider = Slider(
             ax=ax_pr,
             label="PR",

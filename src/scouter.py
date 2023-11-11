@@ -54,8 +54,8 @@ class GoogleSheetsScoutingQuery(Scouter):
     _COLUMNS: dict[str, int] = {
         "team": 0,
         "date": 1,
-        "pr": 3,
-        "club": 4,
+        "pr": 2,
+        "club": 3,
     }
 
     @classmethod

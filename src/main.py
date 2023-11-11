@@ -85,11 +85,11 @@ async def scout(
         team_info = MainScouter.read_scouting(team_names=team_list)
     else:
         team_info = MainScouter.read_scouting(club_name=club)
-    border_str = "-" * 54
-    header_str = f"| {'Team' : ^20} | {'Date' : ^10} | {'OVR': ^5} | {'PR': ^6} |"
+    border_str = "-" * 46
+    header_str = f"| {'Team' : ^20} | {'Date' : ^10} | {'PR': ^6} |"
     body_str = "\n".join(
         [
-            f"| {info.team : ^20} | {info.date.strftime('%m/%d/%Y') : ^10} | {info.ovr if info.ovr else '' : ^5} | {info.pr if info.pr else '' : ^6} |"
+            f"| {info.team : ^20} | {info.date.strftime('%m/%d/%Y') : ^10} | {info.pr if info.pr else '' : ^6} |"
             for info in team_info
         ]
     )

@@ -54,7 +54,6 @@ class GoogleSheetsScoutingQuery(Scouter):
     _COLUMNS: dict[str, int] = {
         "team": 0,
         "date": 1,
-        "ovr": 2,
         "pr": 3,
         "club": 4,
     }
@@ -148,9 +147,7 @@ class GoogleSheetsScoutingQuery(Scouter):
                         date=datetime.strptime(
                             team_vals[cls._COLUMNS["date"]], "%m/%d/%Y"
                         ),
-                        ovr=float(team_vals[cls._COLUMNS["ovr"]])
-                        if team_vals[cls._COLUMNS["ovr"]].replace(".", "").isdigit()
-                        else None,
+                        ovr=None,
                         pr=int(team_vals[cls._COLUMNS["pr"]])
                         if team_vals[cls._COLUMNS["pr"]].isdigit()
                         else None,

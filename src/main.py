@@ -77,14 +77,17 @@ async def scout(
         team_list = teams.split(" ")
         k_max_teams = 25
         if len(team_list) > k_max_teams:
-            await context.respond(
-                f"Too many teams entered ({len(team_list)}). Maximum is {k_max_teams}."
+            await context.edit(
+                content=f"Too many teams entered ({len(team_list)}). Maximum is {k_max_teams}."
             )
             return
         # Get scouting teams then format
         team_info = MainScouter.read_scouting(team_names=team_list)
     else:
         team_info = MainScouter.read_scouting(club_name=club)
+    if not team_info:
+        await context.edit(content="No given teams found in database")
+        return
     border_str = "-" * 44
     header_str = f"| {'Team' : ^20} | {'Date' : ^8} | {'PR': ^6} |"
     body_str = "\n".join(
@@ -95,7 +98,7 @@ async def scout(
     )
     response = f"```\n{club if club else ''}\n{border_str}\n{header_str}\n{border_str}\n{body_str}\n{border_str}\n```"
     # Send formatted teams to Discord
-    await context.respond(response)
+    await context.edit(content=response)
 
 
 @bot.command(description="Calculate GI of player from base stats")  # type: ignore

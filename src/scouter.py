@@ -162,8 +162,6 @@ class GoogleSheetsScoutingQuery(Scouter):
             raise RuntimeError(
                 "Connection to scouting database could be properly established"
             )
-        if not tuple_teams:
-            raise RuntimeWarning("No given teams found in database")
         return tuple_teams
 
 
